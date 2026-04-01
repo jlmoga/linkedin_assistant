@@ -618,6 +618,21 @@ input:focus {
   border-color: #fca5a5;
 }
 
+.text-btn-danger {
+  background: none;
+  border: none;
+  color: #dc2626;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  transition: opacity var(--transition);
+}
+
+.text-btn-danger:hover {
+  opacity: 0.7;
+}
+
 /* ===================================================
    CHIP SELECTOR (Modality)
    =================================================== */
@@ -667,6 +682,17 @@ input:focus {
 
 .tag-input-wrapper:focus-within {
   border-color: var(--li-blue);
+  box-shadow: 0 0 0 1px var(--li-blue-light);
+}
+
+.tag-input-wrapper.no-go:focus-within {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #fee2e2;
+}
+
+.tag-input-wrapper.core:focus-within {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px #dcfce7;
 }
 
 .tag-list {

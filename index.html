@@ -31,7 +31,7 @@
         </div>
         <div class="logo-text">
           <h1 class="app-title">LinkedIn Assistant</h1>
-          <span class="app-subtitle">El teu assistent professional (v0.3)</span>
+          <span class="app-subtitle">El teu assistent professional (v0.4)</span>
         </div>
       </div>
       <div class="header-badge" id="header-status-badge">
@@ -316,7 +316,11 @@
 
             <div class="grid-2-cols mt-4">
               <div class="form-group tag-input-container">
-                <label for="input-no-go">Hashtags No-Go (Vermell)</label>
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <label for="input-no-go">Hashtags No-Go (Vermell)</label>
+                  <button type="button" id="btn-clear-no-go" class="text-btn-danger"
+                    style="font-size: 0.7rem; padding: 0;">Buidar llista</button>
+                </div>
                 <div class="tag-input-wrapper no-go">
                   <div id="tag-list-no-go" class="tag-list"></div>
                   <input type="text" id="input-no-go" placeholder="Afegir flag vermell..." />
@@ -324,7 +328,11 @@
               </div>
 
               <div class="form-group tag-input-container">
-                <label for="input-core">Hashtag Core (Blau)</label>
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <label for="input-core">Hashtag Core (Verd)</label>
+                  <button type="button" id="btn-clear-core" class="text-btn-danger"
+                    style="font-size: 0.7rem; padding: 0;">Buidar llista</button>
+                </div>
                 <div class="tag-input-wrapper core">
                   <div id="tag-list-core" class="tag-list"></div>
                   <input type="text" id="input-core" placeholder="Afegir preferència positiva..." />

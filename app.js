@@ -75,6 +75,9 @@ const headerStatusBadge = document.getElementById('header-status-badge');
 const headerStatusDot = document.getElementById('header-status-dot');
 const headerStatusText = document.getElementById('header-status-text');
 
+const btnClearNoGo = document.getElementById('btn-clear-no-go');
+const btnClearCore = document.getElementById('btn-clear-core');
+
 // ── State Management ────────────────────────────────
 let originalProfileData = {};
 let stagedCvFile = null;
@@ -275,14 +278,11 @@ function syncUiToJson(currentData) {
 
     if (!conf.perfil_tecnic) conf.perfil_tecnic = {};
     
-    // Unifiquem tags: el que ja hi ha al JSON + els hashtags nous de la UI (sense repeticions)
-    const combinedCore = [...new Set([...(conf.perfil_tecnic.stack_core || []), ...(currentData.coreTags || [])])];
-    const combinedNoGo = [...new Set([...(conf.perfil_tecnic.tecnologies_vetades || []), ...(currentData.noGoTags || [])])];
+    // Sincronització directa: el que l'usuari veu a la UI és el que es desa al JSON
+    conf.perfil_tecnic.stack_core = currentData.coreTags || [];
+    conf.perfil_tecnic.tecnologies_vetades = currentData.noGoTags || [];
     
-    conf.perfil_tecnic.stack_core = combinedCore.sort();
-    conf.perfil_tecnic.tecnologies_vetades = combinedNoGo.sort();
-    
-    // Actualitzem també la UI per reflectir aquesta fusió
+    // Actualitzem també la UI per seguretat (encara que ja ho estigui)
     renderTags(tagListCore, conf.perfil_tecnic.stack_core, 'coreTags');
     renderTags(tagListNoGo, conf.perfil_tecnic.tecnologies_vetades, 'noGoTags');
 
@@ -396,6 +396,20 @@ function setupEventListeners() {
   inputGeminiKey.addEventListener('input', (e) => saveProfileField('geminiKey', e.target.value));
 
   btnAnalitzarCv.addEventListener('click', () => handleCvAnalysis());
+
+  if (btnClearNoGo) {
+    btnClearNoGo.addEventListener('click', () => {
+      renderTags(tagListNoGo, [], 'noGoTags');
+      checkFormChanges();
+    });
+  }
+
+  if (btnClearCore) {
+    btnClearCore.addEventListener('click', () => {
+      renderTags(tagListCore, [], 'coreTags');
+      checkFormChanges();
+    });
+  }
 
   // Offer Tab Handlers
   inputOfertaUrl.addEventListener('input', (e) => {
@@ -1445,6 +1459,7 @@ window.imprimirInforme = function () {
           }
           .global-marker { position: absolute; top: -12px; height: 44px; width: 4px; background: #000; transform: translateX(-50%); }
           .marker-triangle { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #000; }
+
           .analysis-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; display: block; background: #fff; }
           .analysis-summary { list-style: none; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eed; padding-bottom: 10px; margin-bottom: 10px; }
           .analysis-summary::-webkit-details-marker { display: none; }
