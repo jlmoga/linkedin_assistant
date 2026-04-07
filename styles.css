@@ -1,5 +1,5 @@
-/* ===================================================
-   LinkedIn Assistant – Design System (LinkedIn style)
+/* ==========================================================
+   RUMB - LinkedIn Assistant – Design System (LinkedIn style)
    =================================================== */
 
 /* roboto-regular - latin */
@@ -23,54 +23,67 @@
 /* --- Tokens (LinkedIn palette) --- */
 :root {
   /* LinkedIn core colours */
-  --li-blue:        #0a66c2;   /* Primary action blue */
-  --li-blue-dark:   #004182;   /* Hover state */
-  --li-blue-light:  #dce6f1;   /* Tint / active bg */
-  --li-blue-faint:  #eef3f8;   /* Subtle highlight */
+  --li-blue: #0a66c2;
+  /* Primary action blue */
+  --li-blue-dark: #004182;
+  /* Hover state */
+  --li-blue-light: #dce6f1;
+  /* Tint / active bg */
+  --li-blue-faint: #eef3f8;
+  /* Subtle highlight */
 
   /* Amber / Status Warning colors */
-  --amber:          #f39c12;
-  --amber-faint:    #fff8e1;
-  --amber-light:    #ffd54f;
+  --amber: #f39c12;
+  --amber-faint: #fff8e1;
+  --amber-light: #ffd54f;
 
   /* Backgrounds */
-  --bg-base:        #f3f2ef;   /* LinkedIn page background */
-  --bg-surface:     #ffffff;   /* Header / card surface */
-  --bg-tab:         #ffffff;   /* Tab bar background */
+  --bg-base: #f3f2ef;
+  /* LinkedIn page background */
+  --bg-surface: #ffffff;
+  /* Header / card surface */
+  --bg-tab: #ffffff;
+  /* Tab bar background */
 
   /* Text */
-  --text-primary:   #191919;   /* Almost-black */
-  --text-secondary: #666666;   /* Secondary copy */
-  --text-muted:     #999999;   /* Placeholder / disabled */
-  --text-on-blue:   #ffffff;
+  --text-primary: #191919;
+  /* Almost-black */
+  --text-secondary: #666666;
+  /* Secondary copy */
+  --text-muted: #999999;
+  /* Placeholder / disabled */
+  --text-on-blue: #ffffff;
 
   /* Borders */
-  --border:         #e0dfdc;   /* Standard divider */
-  --border-focus:   var(--li-blue);
+  --border: #e0dfdc;
+  /* Standard divider */
+  --border-focus: var(--li-blue);
 
   /* Radius */
-  --radius-sm:      4px;
-  --radius-md:      8px;
-  --radius-lg:      12px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
   /* Shadows (LinkedIn cards have very subtle shadows) */
-  --shadow-card:    0 0 0 1px var(--border), 0 2px 4px rgba(0,0,0,0.08);
-  --shadow-header:  0 1px 3px rgba(0,0,0,0.12);
+  --shadow-card: 0 0 0 1px var(--border), 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.12);
 
   /* Motion */
-  --transition:     180ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow:280ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Layout */
-  --header-h:       52px;
-  --tabbar-h:       52px;
-  --content-max:    1128px;
+  --header-h: 52px;
+  --tabbar-h: 52px;
+  --content-max: 1128px;
 }
 
 /* ===================================================
    RESET & BASE
    =================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -191,8 +204,17 @@ body {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1;   transform: scale(1);    }
-  50%       { opacity: 0.5; transform: scale(0.8);  }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 /* ===================================================
@@ -212,7 +234,10 @@ body {
   overflow-x: auto;
   scrollbar-width: none;
 }
-.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
 
 .tab-btn {
   position: relative;
@@ -289,8 +314,15 @@ body {
 }
 
 @keyframes panel-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ─── Panel hero ─────────────────────────────────── */
@@ -393,10 +425,6 @@ body {
     font-size: 0.9rem;
   }
 
-  .app-subtitle {
-    display: none;
-  }
-
   .tab-bar {
     padding: 0 4px;
   }
@@ -404,6 +432,19 @@ body {
   .tab-btn {
     padding: 0 12px;
     font-size: 0.8rem;
+  }
+
+  /* Per a mòbils molt petits (només icones a les pestanyes) */
+  @media (max-width: 480px) {
+    .tab-label {
+      display: none;
+    }
+
+    .tab-btn {
+      padding: 0 4px;
+      justify-content: center;
+      min-width: 60px;
+    }
   }
 
   .main-content {
@@ -422,6 +463,7 @@ body {
     padding: 18px 18px;
   }
 }
+
 /* ===================================================
    PROFILE SETTINGS GRID
    =================================================== */
@@ -472,7 +514,9 @@ body {
   gap: 16px;
 }
 
-.mt-4 { margin-top: 16px; }
+.mt-4 {
+  margin-top: 16px;
+}
 
 /* ===================================================
    FORM ELEMENTS
@@ -541,7 +585,8 @@ input:focus {
   position: relative;
 }
 
-.drop-zone:hover, .drop-zone.drag-over {
+.drop-zone:hover,
+.drop-zone.drag-over {
   background: var(--li-blue-faint);
   border-color: var(--li-blue);
 }
@@ -726,13 +771,29 @@ input:focus {
   border: 1px solid #bbf7d0;
 }
 
+.tag-list.readonly-tags {
+  background-color: #f1f3f4;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  min-height: 38px;
+}
+
+.tag.readonly {
+  background-color: #e8eaed;
+  color: #5f6368;
+  border: 1px solid #dadce0;
+  cursor: default;
+}
+
 .tag-remove {
   cursor: pointer;
   display: inline-flex;
   opacity: 0.6;
 }
 
-.tag-remove:hover { opacity: 1; }
+.tag-remove:hover {
+  opacity: 1;
+}
 
 .tag-input-wrapper input {
   border: none !important;
@@ -749,13 +810,16 @@ input:focus {
   .panel-grid {
     grid-template-columns: 1fr;
   }
+
   .col-span-2 {
     grid-column: span 1;
   }
+
   .grid-2-cols {
     grid-template-columns: 1fr;
   }
 }
+
 /* ===================================================
    SEARCH & ANALYSIS UI (Examina oferta)
    =================================================== */
@@ -878,6 +942,7 @@ input:focus {
   color: var(--text-secondary);
   margin-top: 4px;
 }
+
 .textarea-footer {
   display: flex;
   justify-content: space-between;
@@ -898,7 +963,7 @@ input:focus {
 }
 
 /* ── Markdown Preview Styling ─────────────────── */
-.markdown-preview h2 {
+.markdown-preview h2, .ia-response-content h2 {
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--li-blue);
@@ -907,7 +972,7 @@ input:focus {
   padding-bottom: 4px;
 }
 
-.markdown-preview h3 {
+.markdown-preview h3, .ia-response-content h3 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
@@ -915,22 +980,22 @@ input:focus {
   margin-bottom: 8px;
 }
 
-.markdown-preview p {
+.markdown-preview p, .ia-response-content p {
   line-height: 1.6;
   margin-bottom: 12px;
 }
 
-.markdown-preview ul {
+.markdown-preview ul, .ia-response-content ul, .ia-response-content ol {
   margin-bottom: 16px;
-  padding-left: 20px;
+  padding-left: 24px;
 }
 
-.markdown-preview li {
+.markdown-preview li, .ia-response-content li {
   margin-bottom: 6px;
   line-height: 1.5;
 }
 
-.markdown-preview strong {
+.markdown-preview strong, .ia-response-content strong {
   color: var(--text-main);
   font-weight: 600;
 }
@@ -976,10 +1041,12 @@ input:focus {
     flex-direction: column;
     align-items: stretch;
   }
+
   .primary-btn {
     width: 100%;
   }
 }
+
 /* ── Status Indicator (NEW) ─────────────────── */
 .status-indicator-card {
   display: flex;
@@ -1015,8 +1082,13 @@ input:focus {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Comparison View (NEW) ─────────────────── */
@@ -1035,6 +1107,7 @@ input:focus {
 #col-analisi {
   grid-column: span 2;
 }
+
 .analysis-controls {
   grid-column: span 2;
   margin-bottom: -12px;
@@ -1070,22 +1143,36 @@ input:focus {
 }
 
 @media (max-width: 1024px) {
+
   /* Al Tablet mantenim 2 columnes a dalt, l'anàlisi sota */
   #col-analisi {
-    order: 3; /* Per sota de Oferta i CV */
+    order: 3;
+    /* Per sota de Oferta i CV */
   }
 }
 
 @media (max-width: 768px) {
-  .comparison-grid {
+
+  .comparison-grid,
+  .comparison-grid.carta-grid {
     grid-template-columns: 1fr;
   }
+
   #col-analisi {
     grid-column: span 1;
-    order: 2; /* Sota de l'oferta */
+    order: 2;
+    /* Sota de l'oferta */
   }
+
   #col-cv {
-    order: 3; /* El CV al final en mòbil */
+    order: 3;
+    /* El CV al final en mòbil */
+  }
+
+  #col-carta-config .column-content {
+    height: auto;
+    min-height: 0;
+    overflow-y: visible;
   }
 }
 
@@ -1148,13 +1235,25 @@ input:focus {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ── Manual Paste UI Fixes ──────────────────── */
@@ -1190,7 +1289,7 @@ input:focus {
   background: white;
   padding: 24px 32px;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
   border: 1px solid var(--border);
 }
@@ -1199,10 +1298,10 @@ input:focus {
   width: 100%;
   height: 20px;
   border-radius: 10px;
-  background: linear-gradient(to right, 
-    #e74c3c 0%, #e74c3c 50%, 
-    #f39c12 50%, #f39c12 75%, 
-    #2ecc71 75%, #2ecc71 100%);
+  background: linear-gradient(to right,
+      #e74c3c 0%, #e74c3c 50%,
+      #f39c12 50%, #f39c12 75%,
+      #2ecc71 75%, #2ecc71 100%);
   position: relative;
   margin-top: 20px;
   margin-bottom: 8px;
@@ -1262,7 +1361,7 @@ input:focus {
 
 .analysis-item:hover {
   border-color: var(--li-blue-light);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .analysis-summary {
@@ -1272,7 +1371,8 @@ input:focus {
   gap: 16px;
   padding: 14px 16px;
   cursor: pointer;
-  list-style: none; /* Hide default triangle */
+  list-style: none;
+  /* Hide default triangle */
 }
 
 /* Hide native default arrow in webkit/blink */
@@ -1381,13 +1481,24 @@ details[open].analysis-item .analysis-summary::after {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
-.status-circle.green { background-color: #28a745; box-shadow: 0 0 10px rgba(40, 167, 69, 0.4); }
-.status-circle.amber { background-color: #ffc107; box-shadow: 0 0 10px rgba(255, 193, 7, 0.4); }
-.status-circle.red   { background-color: #dc3545; box-shadow: 0 0 10px rgba(220, 53, 69, 0.4); }
+.status-circle.green {
+  background-color: #28a745;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.4);
+}
+
+.status-circle.amber {
+  background-color: #ffc107;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+
+.status-circle.red {
+  background-color: #dc3545;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.4);
+}
 
 .match-tag {
   display: inline-block;
@@ -1446,11 +1557,20 @@ details[open].analysis-item .analysis-summary::after {
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.pb-12 { padding-bottom: 48px !important; }
+.pb-12 {
+  padding-bottom: 48px !important;
+}
 
 /* ===================================================
    INFO ALERTS
@@ -1467,15 +1587,20 @@ details[open].analysis-item .analysis-summary::after {
   font-size: 0.85rem;
   line-height: 1.5;
 }
+
 .info-alert svg {
   color: var(--li-blue);
 }
+
 .info-alert.compact {
   padding: 10px 12px;
   background-color: transparent;
   border-color: var(--li-blue-light);
 }
-.mb-4 { margin-bottom: 16px !important; }
+
+.mb-4 {
+  margin-bottom: 16px !important;
+}
 
 /* Spinners */
 .spinner-small {
@@ -1500,5 +1625,7 @@ details[open].analysis-item .analysis-summary::after {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

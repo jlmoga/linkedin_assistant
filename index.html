@@ -4,10 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LinkedIn Assistant</title>
+  <title>Rumb</title>
   <link rel="icon" href="img/logo.jpg" />
   <meta name="description"
-    content="LinkedIn Assistant – La teva eina intel·ligent per analitzar ofertes i optimitzar el teu perfil professional." />
+    content="Rumb – La teva eina intel·ligent per analitzar ofertes i optimitzar el teu perfil professional." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="styles.css" />
@@ -27,10 +27,10 @@
     <div class="header-inner">
       <div class="logo-area">
         <div class="logo-icon">
-          <img src="img/logo.jpg" alt="LinkedIn Assistant Logo">
+          <img src="img/logo.jpg" alt="Rumb Logo">
         </div>
         <div class="logo-text">
-          <h1 class="app-title">LinkedIn Assistant</h1>
+          <h1 class="app-title">Rumb</h1>
           <span class="app-subtitle">El teu assistent professional (v0.5)</span>
         </div>
       </div>
@@ -67,6 +67,19 @@
         </svg>
       </span>
       <span class="tab-label">Carta de presentació</span>
+      <span class="tab-indicator"></span>
+    </button>
+
+    <button id="tab-ventall-professional" class="tab-btn" role="tab" aria-selected="false"
+      aria-controls="panel-ventall-professional" data-tab="ventall-professional">
+      <span class="tab-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        </svg>
+      </span>
+      <span class="tab-label">Ventall professional</span>
       <span class="tab-indicator"></span>
     </button>
 
@@ -182,10 +195,10 @@
             <h3 class="settings-title">3. Resultats de l'anàlisi</h3>
             <div style="display: flex; gap: 8px;">
               <button id="btn-nav-carta" class="secondary-btn compact" onclick="activateTab('carta-presentacio')" hidden>
-                <span>Ves a carta de presentació ✉️</span>
+                <span>Carta de presentació ✉️</span>
               </button>
               <button id="btn-imprimir-analisi" class="secondary-btn compact" onclick="imprimirInforme()" hidden>🖨️
-                Imprimir informe</button>
+                Imprimir</button>
             </div>
           </div>
           <div id="content-analisi" class="column-content">
@@ -335,6 +348,98 @@
       </div>
     </section>
 
+    <!-- PANEL: Ventall professional -->
+    <section id="panel-ventall-professional" class="tab-panel" role="tabpanel" aria-labelledby="tab-ventall-professional" hidden>
+      <div class="panel-hero">
+        <div class="panel-hero-content">
+          <h2 class="panel-title">Descobreix el teu Ventall Professional</h2>
+          <p class="panel-description">Troba noves vies professionals alineades amb les teves habilitats i experiència utilitzant l'esquema d'ocupacions europeu (ESCO).</p>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <!-- ESTAT 1: CAL AFEGIR CV (EMPTY STATE) -->
+        <div id="ventall-empty">
+          <article class="settings-card col-span-2"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 32px; text-align: center; background: var(--bg-surface); border: 2px dashed var(--border); border-radius: var(--radius-lg);">
+            <div
+              style="background: var(--li-blue-faint); padding: 20px; border-radius: 50%; margin-bottom: 24px; color: var(--li-blue);">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <h3 style="margin-bottom: 12px; font-size: 1.5rem; color: var(--text-primary);">Dades de perfil incompletes</h3>
+            <p
+              style="color: var(--text-secondary); max-width: 480px; margin-bottom: 32px; font-size: 1.1rem; line-height: 1.6;">
+              Per descobrir les ocupacions ideals per al teu perfil, abans és necessari que afegeixis el teu CV a la pestanya <strong>El meu CV</strong> i en generis les dades.</p>
+            <button class="primary-btn" onclick="activateTab('el-meu-cv')" style="padding: 12px 32px; font-size: 1rem;">Anar a El meu CV</button>
+          </article>
+        </div>
+
+        <!-- ESTAT 2: CV PLE, LLEST PER CERCAR -->
+        <div id="ventall-active" hidden>
+          <article class="settings-card col-span-2"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px; text-align: center; background: var(--bg-surface); border-radius: var(--radius-lg);">
+            <h3 style="margin-bottom: 16px; font-size: 1.3rem; color: var(--text-primary);">El teu perfil està preparat</h3>
+            <p style="color: var(--text-secondary); max-width: 600px; margin-bottom: 24px;">
+              Utilitzarem la teva experiència recent i un resum del teu perfil per consultar la base de dades europea i trobar la terminologia d'ocupació exacta.
+            </p>
+            <div style="display: flex; gap: 16px;">
+              <button id="btn-generar-ocupacions" class="primary-btn" style="padding: 12px 32px; font-size: 1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="margin-right: 8px;">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                Descobrir ocupacions potencials ✨
+              </button>
+            </div>
+            
+            <div id="ocupacions-loader" style="margin-top: 32px; display: none; flex-direction: column; align-items: center;">
+              <div class="status-loader" style="display: block; margin-bottom: 16px;"></div>
+              <p id="ocupacions-loader-text" style="color: var(--text-secondary);">Connectant amb l'eina intel·ligent i perfilant l'historial...</p>
+              <button id="btn-stop-ocupacions" class="secondary-btn compact" style="margin-top: 16px; border-color: #ea4335; color: #ea4335;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                Aturar
+              </button>
+            </div>
+          </article>
+          
+          <div id="ventall-results" style="margin-top: 24px;" hidden>
+            <h3 class="settings-title" style="margin-bottom: 16px;">Ocupacions recomanades (ESCO)</h3>
+            <div id="llista-ocupacions" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+              <!-- Targetes generades dinàmicament o llistat simple -->
+            </div>
+            
+            <div id="ventall-diccionari-info" style="margin-top: 24px; padding: 16px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" /><path d="M12 8h.01" />
+                  </svg>
+                  <strong>Diccionari d'ocupacions (termes de cerca ESCO):</strong>
+                </p>
+                <div id="diccionari-ocupacions-text" style="font-family: monospace; font-size: 0.75rem; color: var(--li-blue); padding: 8px; background: var(--li-blue-faint); border-radius: 4px; line-height: 1.4; word-break: break-all;"></div>
+              </div>
+
+              <div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" /><path d="M12 8h.01" />
+                  </svg>
+                  <strong>Diccionari d'habilitats de l'usuari (per al matching):</strong>
+                </p>
+                <div id="diccionari-skills-text" style="font-family: monospace; font-size: 0.75rem; color: var(--li-blue); padding: 8px; background: var(--li-blue-faint); border-radius: 4px; line-height: 1.4; word-break: break-all;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- PANEL: El meu CV -->
     <section id="panel-el-meu-cv" class="tab-panel" role="tabpanel" aria-labelledby="tab-el-meu-cv" hidden>
       <div class="panel-grid">
@@ -354,6 +459,20 @@
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
                 <input type="url" id="input-linkedin-url" placeholder="https://www.linkedin.com/in/perfil/" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="input-dispo-dies">Disponibilitat d'incorporació (Dies)</label>
+              <div class="input-with-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <input type="number" id="input-dispo-dies" placeholder="Ex: 15" min="0" />
               </div>
             </div>
 
@@ -524,7 +643,7 @@
               <polyline points="17 21 17 13 7 13 7 21" />
               <polyline points="7 3 7 8 15 8" />
             </svg>
-            <span style="vertical-align: middle;">Guardar totes les dades del Perfil / CV</span>
+            <span style="vertical-align: middle;">Guardar dades del perfil / CV</span>
           </button>
           <p id="save-status-msg" class="save-status-msg mt-3" hidden>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -545,9 +664,15 @@
           <div class="settings-content">
             <!-- Progress Bar -->
             <div id="analysis-progress-container" class="progress-container" hidden>
-              <div class="progress-info">
-                <span id="analysis-status-text">Preparant l'anàlisi...</span>
-                <span id="analysis-percentage">0%</span>
+              <div class="progress-info" style="display: flex; align-items: center; width: 100%;">
+                <span id="analysis-status-text" style="flex: 1;">Preparant l'anàlisi...</span>
+                <span id="analysis-percentage" style="margin-right: 12px;">0%</span>
+                <button id="btn-stop-analysis" class="text-btn-danger" style="display: flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 0.75rem; border: 1px solid #fecaca; background: #fff1f2;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <rect x="6" y="6" width="12" height="12"></rect>
+                  </svg>
+                  Aturar
+                </button>
               </div>
               <div class="progress-bar">
                 <div id="analysis-progress-filler" class="progress-filler"></div>
@@ -594,13 +719,66 @@
               </div>
             </div>
 
+            <div class="grid-2-cols" style="align-items: start; margin-bottom: 16px;">
+              <!-- Columna 1: Rol i Resum -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="form-group">
+                  <label for="input-rol-actual">Rol actual</label>
+                  <div class="input-with-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input type="text" id="input-rol-actual" readonly style="background-color: #f1f3f4; border-color: transparent;" placeholder="S'obtindrà de l'anàlisi..." />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="textarea-resum-prof">Resum professional</label>
+                  <textarea id="textarea-resum-prof" readonly class="form-input" style="background-color: #f1f3f4; border-color: transparent; min-height: 80px; line-height: 1.4; resize: none;" rows="4" placeholder="S'obtindrà de l'anàlisi..."></textarea>
+                </div>
+              </div>
+
+              <!-- Columna 2: Habilitats -->
+              <div class="form-group" style="height: 100%;">
+                <label>Habilitats professionals</label>
+                <div id="readonly-skills-list" class="tag-list readonly-tags" style="flex: 1; min-height: 153px;">
+                  <span style="color: #9aa0a6; font-size: 0.75rem;">S'obtindrà de l'anàlisi...</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="cv-next-steps-container" class="info-alert" style="background-color: var(--li-blue-faint); border-color: var(--li-blue-light); margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;" hidden>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="var(--li-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="flex-shrink: 0; margin-top: 2px;">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+                <div style="flex: 1;">
+                  <h4 style="margin: 0 0 4px 0; color: var(--li-blue);">Perfil analitzat amb èxit!</h4>
+                  <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Ara ja pots emprar la resta d'eines de l'aplicació per impulsar el teu futur professional.</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
+                <button type="button" id="btn-goto-ofertes" class="primary-btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  Anar a examinar ofertes
+                </button>
+
+                <button type="button" id="btn-goto-ventall" class="secondary-btn" style="padding: 8px 16px; font-size: 0.9rem; background-color: white;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  Anar al ventall professional
+                </button>
+              </div>
+            </div>
+
             <div class="form-group">
               <label for="textarea-cv-json">Dades del CV (Format JSON)</label>
               <textarea id="textarea-cv-json" class="code-textarea"
                 placeholder='{ "nom": "...", "experiencia": [...] }'></textarea>
               <div class="textarea-footer">
-                <p class="input-hint">Aquesta àrea conté la informació estructurada del teu CV per a l'anàlisi
-                  d'ofertes.</p>
+                <p class="input-hint">Aquesta àrea conté la informació estructurada del teu CV per a l'anàlisi d'ofertes. Pots editar el JSON però no s'habiliten ajudes que verifiquin la validesa de l'estructura. Actúa amb precaució.</p>
                 <button id="btn-copy-json" class="secondary-btn compact">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"

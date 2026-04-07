@@ -1,6 +1,6 @@
-# LINKEDIN ASSISTANT - DOCUMENTACIÓ TÈCNICA
+# RUMB - DOCUMENTACIÓ TÈCNICA
 
-Aquest document detalla el funcionament, configuració i arquitectura de dades de l'aplicació LinkedIn Assistant.
+Aquest document detalla el funcionament, configuració i arquitectura de dades de l'aplicació Rumb.
 
 ---
 
@@ -28,9 +28,9 @@ http://localhost:3500
 
 ### Entorn tecnològic:
 L'aplicació utilitza la Intel·ligència Artificial de Google per a l'anàlisi de dades.
-- **Model**: gemini-2.0-flash
-- **Versió API**: v1beta
-- **Endpoint**: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+- **Model**: gemini-2.5-flash
+- **Versió API**: v1
+- **Endpoint**: https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent
 
 ### Configuració de l'API Key:
 1. **Accés a Google Cloud Console**: 
@@ -99,6 +99,7 @@ L'esquelet del currículum que el sistema espera i manipula és el següent:
     "perfil_tecnic": {
       "stack_core": ["Tag1", "Tag2"],
       "stack_secundari": ["Tag3"],
+      "skills": ["Skill1", "Skill2"],
       "tecnologies_vetades": ["Filtre1"],
       "idiomes": [{"idioma": "Català", "nivell": "Natiu"}]
     },
@@ -116,6 +117,7 @@ L'esquelet del currículum que el sistema espera i manipula és el següent:
         "carrec": "Rol",
         "periode": "Anys",
         "stack_utilitzat": ["Tech1"],
+        "skills_experiencia": ["Skill A", "Skill B"],
         "responsabilitats": ["Tasca 1", "Tasca 2"],
         "fites_clau": "Descripció d'un èxit..."
       }
@@ -181,6 +183,47 @@ KPI,Pes Relatiu,Lògica d'Execució (Punts base sobre 100)
 6. Stack Secundari (Nice-to-have),5%,🟢 (>2 coincidències: 100 pts)🟡 (1 o 2 coincidències: 50 pts)🔴 (0 coincidències: 0 pts)
 7. Compatibilitat de Sector,5%,"🟢 (sectors coincidents: 100 pts)🟡 (Nou sector: 60 pts)🔴 (Sector vetat, si n'hi ha: 0 pts)"
 8. Educació i Certificats (Requerits),5%,🟢 (>2 coincidències: 100 pts)🟡 (1-2 coincidències: 50 pts)🔴 (Títols exigits on no se'n compleix cap: 0 pts)
+
+---
+
+## 6. INTEGRACIÓ AMB L'API ESCO (EUROPEAN SKILLS, COMPETENCES, QUALIFICATIONS AND OCCUPATIONS)
+
+La pestanya **"Ventall professional"** permet consultar la base de dades europea d'ocupacions i competències (ESCO) per trobar encaixos basats en el CV de l'usuari.
+
+### 6.1 Accés a l'API
+L'API REST d'ESCO és d'accés obert (no requereix API Key) i permet cercar per text i recuperar ocupacions i skills associades. L'URL base és:
+`https://ec.europa.eu/esco/api`
+
+#### Endpoints principals:
+1. **Cerca per text (Search):**
+   Utilitzat per buscar ocupacions partint de termes normalitzats (que proporciona Gemini a partir del CV).
+   - Accés: `GET /search?text={terme}&type=occupation&language={idioma}&limit={limit}`
+   - Exemple: `https://ec.europa.eu/esco/api/search?text=project%20manager&type=occupation&language=en&limit=5`
+2. **Recurs específic (Resource):**
+   Utilitzat per consultar els detalls exactes d'una ocupació o skill un cop se'n coneix la URI (inclou les skills associades a una ocupació).
+   - Accés: `GET /resource/occupation?uri={uri_ocupacio}&language={idioma}`
+
+### 6.2 Llistat de camps dels repositoris (Model de Dades)
+
+**Objecte Ocupació (Occupation):**
+Aquests són els camps rellevants quan es fa una cerca o es recupera una ocupació:
+- `uri`: Identificador únic universal (URL format) per a fer les crides de detall de l'ocupació.
+- `title`: Títol oficial principal de l'ocupació (ex. "software developer").
+- `preferredLabel`: Diccionari de codis d'idioma i les corresponents traduccions del títol recomanat.
+- `code`: Codi estandarditzat de l'ocupació.
+- `_links`: Objectes amb URLs útils de ruteig semàntic.
+
+Al demanar el detall d'una ocupació (`resource/occupation`), aquesta conté els arrays de referència a les eines o habilitats esperades d'aquell perfil professional:
+- `_links.hasEssentialSkill`: Llistat d'apuntadors a skills que són **obligatòries** per a l'ocupació.
+- `_links.hasOptionalSkill`: Llistat d'apuntadors a skills que són **opcionals o recomanades**.
+
+**Objecte Skill/Competència:**
+Dins dels nodes d'informació d'skills (ex. `hasEssentialSkill`), o al consultar la seva pròpia URI de recurs, trobarem:
+- `uri`: Identificador únic universal de la competència.
+- `title`: Nom de la competència o habilitat (ex. "Python (computer programming)", "sales argumentation").
+- `skillType`: Categoria que discrimina si és una habilitat/destresa teòrica o pràctica:
+  - `http://data.europa.eu/esco/skill-type/knowledge`: Denota coneixements teòrics i aprenentatges ("characteristics of products").
+  - `http://data.europa.eu/esco/skill-type/skill`: Denota habilitats i destreses pràctiques ("operate cash register").
 
 ---
 Creat per Antigravity AI - 2026
