@@ -1636,3 +1636,75 @@ details[open].analysis-item .analysis-summary::after {
     transform: rotate(360deg);
   }
 }
+
+/* ===================================================
+   MARKDOWN CONTENT STYLING
+   =================================================== */
+.markdown-body,
+.markdown-preview {
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.markdown-body p,
+.markdown-preview p {
+  margin-bottom: 12px;
+}
+
+.markdown-body ul,
+.markdown-body ol,
+.markdown-preview ul,
+.markdown-preview ol {
+  margin-bottom: 12px;
+  padding-left: 1.5rem !important; /* Fixes the bullet alignment issues */
+  list-style-position: outside;
+}
+
+.markdown-body li,
+.markdown-preview li {
+  margin-bottom: 4px;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--li-blue);
+  font-weight: 700;
+}
+
+.markdown-body h1, .markdown-preview h1 { font-size: 1.4rem; }
+.markdown-body h2, .markdown-preview h2 { font-size: 1.25rem; }
+.markdown-body h3, .markdown-preview h3 { font-size: 1.1rem; }
+
+.markdown-body strong,
+.markdown-preview strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.markdown-body blockquote,
+.markdown-preview blockquote {
+  border-left: 4px solid var(--li-blue-light);
+  padding-left: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 12px 0;
+}
+
+.markdown-body code,
+.markdown-preview code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  background-color: var(--li-blue-faint);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--li-blue-dark);
+}
+
+.markdown-body hr,
+.markdown-preview hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
