@@ -1451,6 +1451,12 @@ async function handleGenerarOcupacions() {
     await Promise.all(ocupacionsArray.map(ocDesc => fetchAndRender(ocDesc)));
 
     updateVentallProgress(100, "✓ Procés completat correctament.");
+    
+    // Actualitzem el text del resum global per indicar finalització
+    if (globalContainer) {
+      const countLabel = globalContainer.querySelector('#global-count-val');
+      if (countLabel) countLabel.textContent = `✓ Basat en ${ocupacionsArray.length} ocupacions analitzades.`;
+    }
     ventallResults.hidden = false;
 
   } catch (err) {
@@ -1512,7 +1518,7 @@ async function fetchEscoData(ocDesc, signal) {
 function renderGlobalSummaryPlaceholder() {
   const container = document.createElement('div');
   container.className = 'global-summary-card';
-  container.style.cssText = 'padding: 24px; background: var(--li-blue-faint); border-radius: var(--radius-lg); border: 1px solid var(--li-blue-light); margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;';
+  container.style.cssText = 'padding: 24px; background: var(--li-blue-faint); border-radius: var(--radius-lg); border: 1px solid var(--li-blue-light); margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;';
   llistaOcupacions.appendChild(container);
   return container;
 }
@@ -1535,16 +1541,26 @@ function updateGlobalSummary(container, results, userSkillsDict) {
   // Mantenim l'estructura per no recrear el botó cada vegada
   if (!container.innerHTML || container.innerHTML.includes('Esperant dades')) {
     container.innerHTML = `
-      <div style="flex: 1;">
-        <h4 style="margin: 0 0 12px 0; font-size: 1.2rem; color: var(--li-blue); font-weight: 700;">Assoliment global del teu perfil professional (ESCO)</h4>
-        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-          <div style="font-size: 1rem;"><strong>Essencials:</strong> <span id="global-ess-val" style="margin-left:6px; padding: 4px 12px; border-radius: 20px; background: #e6f4ea; color: #137333; font-weight: 700;">${essConf}</span></div>
-          <div style="font-size: 1rem;"><strong>Opcionals:</strong> <span id="global-opt-val" style="margin-left:6px; padding: 4px 12px; border-radius: 20px; background: #fef7e0; color: #b06000; font-weight: 700;">${optConf}</span></div>
+      <div style="flex: 1; min-width: 300px;">
+        <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: var(--li-blue); font-weight: 700;">Assoliment global del teu perfil professional (ESCO)</h4>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <!-- Impact Box Essential -->
+          <div style="background: #fff; border: 1px solid #cce8d5; border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 120px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div id="global-ess-val" style="font-size: 2.2rem; font-weight: 800; color: #137333; line-height: 1;">${essConf}</div>
+            <div style="font-size: 0.75rem; color: #137333; font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px;">Essencials</div>
+          </div>
+          <!-- Impact Box Optional -->
+          <div style="background: #fff; border: 1px solid #fbe7b2; border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 120px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div id="global-opt-val" style="font-size: 2.2rem; font-weight: 800; color: #b06000; line-height: 1;">${optConf}</div>
+            <div style="font-size: 0.75rem; color: #b06000; font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px;">Opcionals</div>
+          </div>
         </div>
-        <p id="global-count-val" style="font-size: 0.8rem; color: var(--text-secondary); margin: 8px 0 0 0;">Processant ocupacions... (${results.length})</p>
+        <p id="global-count-val" style="font-size: 0.8rem; color: var(--text-secondary); margin: 12px 0 0 4px; font-style: italic;">
+          Processant ocupacions... (${results.length})
+        </p>
       </div>
-      <div style="flex-shrink: 0;">
-        <button id="btn-global-improvements" class="primary-btn" style="white-space: nowrap;">Millores globals del teu CV</button>
+      <div style="flex-shrink: 0; display: flex; align-items: center;">
+        <button id="btn-global-improvements" class="primary-btn" style="white-space: nowrap; padding: 12px 24px;">Millores globals del teu CV</button>
       </div>
     `;
 
@@ -1611,7 +1627,13 @@ Respon en Markdown pur, concís, max 500 paraules.`;
     // Només actualitzem els valors dels badges
     container.querySelector('#global-ess-val').textContent = essConf;
     container.querySelector('#global-opt-val').textContent = optConf;
-    container.querySelector('#global-count-val').textContent = `Processant ocupacions... (${results.length})`;
+    
+    // Actualització del text de recompte
+    const statusText = container.innerHTML.includes('✓ Procés completat') 
+      ? `✓ Basat en ${results.length} ocupacions analitzades.`
+      : `Anàlisi en curs... (${results.length} ocupacions processades)`;
+    
+    container.querySelector('#global-count-val').textContent = statusText;
   }
 }
 
