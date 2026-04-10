@@ -27,7 +27,10 @@ export function imprimirInforme() {
       <head>
         <meta charset="UTF-8">
         <title>Informe d'Anàlisi de Compatibilitat</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+              integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
         <style>
+
           @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
           html { font-size: 80%; }
           body { 
@@ -83,7 +86,34 @@ export function imprimirInforme() {
             body { padding: 0; }
             .analysis-item { page-break-inside: avoid; }
             .global-indicator-card { page-break-after: avoid; }
+            #offer-route-map-container { 
+              max-width: 500px; 
+              margin: 20px auto !important; 
+            }
+            #offer-route-map { 
+              width: 500px !important; 
+              height: 500px !important; 
+            }
+            .expert-conclusions-card {
+              background: #f0f7ff !important;
+              border: 1px solid #0a66c2 !important;
+              border-left: 6px solid #0a66c2 !important;
+              padding: 20px;
+              margin-top: 20px;
+              page-break-inside: avoid;
+              border-radius: 8px;
+            }
+            .expert-header h4 {
+              margin: 0 0 10px 0;
+              color: #004182;
+              font-size: 1.2rem;
+            }
+            .expert-content {
+              font-size: 0.95rem;
+            }
           }
+
+
         </style>
       </head>
       <body>

@@ -10,6 +10,7 @@ import * as cvManager from './modules/cv-manager.js';
 import * as offerAnalysis from './modules/examina-oferta.js';
 import * as ventall from './modules/ventall-professional.js';
 import * as coverLetter from './modules/carta-presentacio.js';
+import * as mapManager from './modules/map-manager.js';
 import * as printUtils from './modules/print-utils.js';
 import { isValidUrl } from './modules/utils.js';
 
@@ -22,6 +23,14 @@ window.imprimirCarta = coverLetter.imprimirCarta;
 async function init() {
   await db.initDB();
   cvManager.loadProfileData();
+  mapManager.initMap();
+  
+  // Initial map render if address exists
+  const initialData = cvManager.collectFormData();
+  if (initialData.address) {
+    mapManager.updateMap(initialData.address, initialData.radius);
+  }
+
   setupEventListeners();
   uiUtils.restoreActiveTab();
   cvManager.checkProfileStatus(); 
@@ -51,11 +60,13 @@ function setupEventListeners() {
   dom.inputAddress.addEventListener('input', (e) => {
     cvManager.saveProfileField('address', e.target.value);
     cvManager.checkProfileStatus();
+    mapManager.updateMapDebounced(e.target.value, dom.inputRadius.value);
   });
   
   dom.inputRadius.addEventListener('input', (e) => {
     cvManager.saveProfileField('radius', e.target.value);
     cvManager.checkProfileStatus();
+    mapManager.updateMapDebounced(dom.inputAddress.value, e.target.value);
   });
   
   dom.inputSbaMin.addEventListener('input', (e) => {

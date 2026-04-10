@@ -4,6 +4,7 @@
 
 import * as dom from './dom.js';
 import { autoExpandResum } from './cv-manager.js';
+import { invalidateMapSize } from './map-manager.js';
 
 export function updateAiStatus(message, showProgress = true) {
   if (dom.headerStatusDot && dom.headerStatusText) {
@@ -32,6 +33,7 @@ export function activateTab(tabId) {
   // Especial: Redimensionar resum professional si entrem a la pestanya de CV
   if (tabId === 'el-meu-cv') {
     setTimeout(autoExpandResum, 100);
+    invalidateMapSize();
   }
 }
 

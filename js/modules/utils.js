@@ -115,3 +115,25 @@ export function renderJsonToMarkdown(jsonStr) {
     return "⚠️ _Error en processar el format del CV JSON. Revisa la consola._";
   }
 }
+
+/**
+ * Neteja l'HTML de tags no rellevants (scripts, styles, etc.) per reduir el pes enviat a la IA.
+ */
+export function cleanHtml(html) {
+  if (!html) return "";
+  
+  // Creem un element temporal per parsejar l'HTML
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  
+  // Eliminem tags brossa
+  const tagsToRemove = ['script', 'style', 'noscript', 'iframe', 'svg', 'path', 'meta', 'link', 'nav', 'footer', 'header'];
+  tagsToRemove.forEach(tag => {
+    const elements = doc.querySelectorAll(tag);
+    elements.forEach(el => el.remove());
+  });
+
+  // Retornem el text netejat (o el body simplificat)
+  // Per a Gemini, el innerText acostuma a ser suficient i estalvia molts tokens
+  return doc.body ? doc.body.innerText.replace(/\s+/g, ' ').trim() : "";
+}
+

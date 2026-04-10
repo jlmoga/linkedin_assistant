@@ -1362,6 +1362,57 @@ input:focus {
   }
 }
 
+/* --- Expert Conclusions Card --- */
+.expert-conclusions-card {
+  grid-column: 1 / -1;
+  background: var(--li-blue-faint);
+  border: 1px solid var(--li-blue-light);
+  border-left: 6px solid var(--li-blue);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  animation: slideUp 0.5s ease-out;
+}
+
+.expert-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: var(--li-blue-dark);
+}
+
+.expert-header h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.expert-content {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+
+.expert-content p {
+  margin-bottom: 12px;
+}
+
+.expert-content ul {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.expert-content li {
+  margin-bottom: 6px;
+}
+
+.expert-content strong {
+  color: var(--li-blue-dark);
+}
+
+
 .analysis-item {
   background: #fff;
   border: 1px solid #e1e9ee;
@@ -1711,4 +1762,25 @@ details[open].analysis-item .analysis-summary::after {
   border: 0;
   border-top: 1px solid var(--border);
   margin: 16px 0;
+}
+
+/* --- Mapping --- */
+#residence-map {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.map-helper-text {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* Ensure Leaflet controls don't mess up the layout */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.custom-div-icon {
+  background: none;
+  border: none;
 }

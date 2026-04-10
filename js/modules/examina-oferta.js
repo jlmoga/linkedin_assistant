@@ -6,8 +6,9 @@ import * as dom from './dom.js';
 import { state } from './state.js';
 import { callGemini } from './api.js';
 import * as uiUtils from './ui-utils.js';
-import { isValidUrl, renderJsonToMarkdown } from './utils.js';
+import { isValidUrl, renderJsonToMarkdown, cleanHtml } from './utils.js';
 import { updateCoverLetterUI } from './carta-presentacio.js';
+import { renderOfferRouteMap } from './map-manager.js';
 
 export async function startAnalysis(url) {
   if (dom.ofertaUrlInputArea) dom.ofertaUrlInputArea.hidden = true;
@@ -34,19 +35,103 @@ export async function startAnalysis(url) {
 
   if (dom.contentAnalisi) dom.contentAnalisi.innerHTML = '';
 
+  // 1. Detectar si és LinkedIn
+  const isLinkedIn = url.includes('linkedin.com/jobs') || url.includes('linkedin.com/mwlite/jobs');
+
+  if (isLinkedIn) {
+    // LinkedIn sol bloquejar proxies CORS i scraping directe. Fallback directe.
+    showManualPasteUI("Accés restringit per LinkedIn", "LinkedIn no permet la lectura directa des del navegador.");
+    return;
+  }
+
+  // 2. Intentar scraping per a URLs externes
   try {
-    const response = await fetch(url, { mode: 'no-cors' });
-    throw new Error('CORS_RESTRICTION');
+    dom.statusMessageMain.innerHTML = `<strong>Llegint el lloc web...</strong>`;
+    const html = await scrapOffer(url);
+    
+    if (!html) throw new Error('EMPTY_HTML');
+
+    dom.statusMessageMain.innerHTML = `<strong>Detectant punts clau...</strong>`;
+    dom.statusMessageSub.textContent = `Analitzant funcions i requeriments crítics.`;
+    const extractedJobText = await extractJobFromHtml(html);
+
+    
+    if (!extractedJobText) throw new Error('EXTRACTION_FAILED');
+
+    // Si tot ha anat bé, procedim a l'anàlisi de compatibilitat
+    processJobAnalysis(extractedJobText);
+
   } catch (err) {
-    showManualPasteUI();
+    console.warn("Scraping automàtic fallit:", err);
+    showManualPasteUI("No s'ha pogut llegir l'oferta", "No hem pogut extreure les dades automàticament d'aquesta web.");
   }
 }
 
-export function showManualPasteUI() {
+/**
+ * Recupera l'HTML d'una URL utilitzant AllOrigins com a proxy CORS.
+ */
+async function scrapOffer(url) {
+  try {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) throw new Error(`Proxy error: ${response.status}`);
+    
+    const data = await response.json();
+    return data.contents; // AllOrigins retorna l'HTML a la propietat 'contents'
+  } catch (err) {
+    console.error("Error en fer el fetch de l'oferta:", err);
+    return null;
+  }
+}
+
+/**
+ * Utilitza Gemini per extreure la informació professional rellevant d'un codi HTML brut.
+ */
+async function extractJobFromHtml(html) {
+  const cleanedText = cleanHtml(html);
+  
+  const prompt = `
+    Ets un assistent expert en recruiting i RRHH. T'enviaré el contingut d'una pàgina web que conté una oferta de feina.
+    La teva tasca és extreure la informació rellevant i presentar-la de forma neta i estructurada.
+    
+    EXTREU I REESTRUCTURA EN MARKDOWN SEGUINT AQUESTA ESTRUCTURA EXACTA:
+    - **Títol de la posició**
+    - **Descripció de la posició**
+    - **Localització del lloc de feina**
+    - **Principals funcions**
+    - **Requeriments crítics**
+    - **Requeriments secundaris**
+    - **Beneficis**
+    
+    REGLES IMPORTANTS:
+    - Si no trobes informació per a alguna d'aquestes seccions, escriu literalment: "No s'ha trobat informació rellevant per aquesta secció."
+    - No inventis dades, sigues fidel al contingut original.
+    - El to ha de ser professional i analític.
+    
+    CONTINGUT DE LA WEB:
+    ---
+    ${cleanedText.substring(0, 15000)} 
+    ---
+    
+    Respon amb el Markdown estructurat.
+
+  `;
+
+  try {
+    const result = await callGemini(prompt);
+    return result;
+  } catch (err) {
+    console.error("Error extraient dades amb Gemini:", err);
+    return null;
+  }
+}
+
+export function showManualPasteUI(title = "Accés restringit", subtext = "Actualment no podem llegir aquesta web automàticament.") {
   if (dom.ofertaUrlInputArea) dom.ofertaUrlInputArea.hidden = true;
 
-  dom.statusMessageMain.innerHTML = `<strong>Accés restringit per LinkedIn</strong>`;
-  dom.statusMessageSub.textContent = `Si us plau, enganxa el text de l'oferta a la columna esquerra.`;
+  dom.statusMessageMain.innerHTML = `<strong>${title}</strong>`;
+  dom.statusMessageSub.textContent = subtext;
   dom.statusLoader.style.display = 'none';
 
   dom.contentOferta.innerHTML = `
@@ -97,8 +182,9 @@ export async function processJobAnalysis(jobText) {
   const userIdiomes = config.perfil_tecnic?.idiomes?.map(i => `${i.idioma} (${i.nivell})`).filter(Boolean) || [];
 
   dom.statusLoader.style.display = 'block';
-  dom.statusMessageMain.innerHTML = `<strong>L'IA està avaluant el teu "fit" real...</strong>`;
-  dom.statusMessageSub.textContent = `Analitzant semàfors de compatibilitat.`;
+  dom.statusMessageMain.innerHTML = `<strong>Realitzant avaluació semàntica...</strong>`;
+  dom.statusMessageSub.textContent = `Contrastant el teu perfil amb els requeriments de l'oferta.`;
+
 
   dom.contentAnalisi.innerHTML = `
     <div class="text-center py-10">
@@ -108,7 +194,7 @@ export async function processJobAnalysis(jobText) {
   `;
 
   const prompt = `
-    Ets un expert en recruiting. Compara aquest perfil amb l'oferta de feina.
+    Ets un expert en recruiting i RRHH. Compara aquest perfil amb l'oferta de feina proporcionada.
     
     PERFIL USUARI:
     - Stack Core: ${userCore.join(', ')}
@@ -121,20 +207,44 @@ export async function processJobAnalysis(jobText) {
     - Educació i Certificats: ${userEdu.join(', ')}
     - Idiomes: ${userIdiomes.join(', ')}
     
-    OFERTA DE FEINA:
+    OFERTA DE FEINA (TEXT BRUT O PARCIAL):
     ${jobText}
     
-    Respon EXCLUSIVAMENT amb un objecte JSON amb aquesta estructura EXACTA. Repeteixo: Retorna exclusivament el JSON.
+    TASQUES:
+    1. Generar una versió estructurada de l'oferta (camp 'oferta_formatada_md') seguint aquests punts:
+       - Títol de la posició
+       - Descripció de la posició
+       - Localització del lloc de feina
+       - Principals funcions
+       - Requeriments crítics
+       - Requeriments secundaris
+       - Beneficis
+       (Si falta info a alguna secció, escriu: "No s'ha trobat informació rellevant per aquesta secció.")
+       
+    2. Realitzar l'anàlisi de compatibilitat (KPIs).
+    
+    3. Generar un resum d'encaix professional (camp 'encaix_professional_md'):
+       - Actua com un expert en Recruiting i RRHH.
+       - Focus: Acompliment de funcions i requeriments crítics.
+       - Estil: CONCÍS i molt enfocat a CARÀCTER PRÀCTIC.
+       - Evita introduccions genèriques; ves directament als punts forts o febles del candidat per a aquesta posició concreta.
+
+    Respon EXCLUSIVAMENT amb un objecte JSON amb aquesta estructura EXACTA.
     {
-      "no_go": { "status": "green", "resum": "No hi ha vetos.", "user_data": "L'usuari ha vetat: PHP, Ruby", "offer_data": "L'oferta no menciona requisits vetats." },
-      "core_matches": { "status": "green", "resum": "Gran coincidència core.", "user_data": "El core és: Java, Angular, SQL", "offer_data": "L'oferta demana extensivament Angular i Java." },
-      "secondary_matches": { "status": "amber", "resum": "Coincidència parcial.", "user_data": "Stack secundari: Docker, Kubernetes", "offer_data": "S'esmenta només Docker breument." },
-      "ubicacio_modalitat": { "status": "green", "resum": "Modalitat correcte.", "user_data": "Demana 100% Remot.", "offer_data": "L'oferta admet teletreball integral." },
-      "salari": { "status": "amber", "resum": "Entre el mínim i desitjat.", "user_data": "El mínim és 40k, el desitjat 55k.", "offer_data": "Rang visible de 45.000€ a 50.000€." },
-      "sector": { "status": "green", "resum": "Coincidència de sector informàtic.", "user_data": "Sectors previs: Banca, IT", "offer_data": "És una empresa tecnològica." },
-      "educacio": { "status": "green", "resum": "Format adequat.", "user_data": "Enginyeria Informàtica (UPC)", "offer_data": "Es demana Grau en Informàtica." },
-      "idiomes": { "status": "green", "resum": "Certificacions suficients.", "user_data": "Anglès (B2), Castellà (Nadiu)", "offer_data": "L'oferta demana anglès alt." }
+      "oferta_formatada_md": "...",
+      "encaix_professional_md": "### Conclusions de l'Expert\\n... (Anàlisi pràctica i concisa)",
+      "no_go": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "core_matches": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "secondary_matches": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "ubicacio_modalitat": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "salari": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "sector": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "educacio": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "idiomes": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
+      "ubicacio_oferta": "..."
     }
+
+
     
     NOTES LÒGICA (Molt Important):
     1. no_go status: 'amber' si trobes algun veto dins l'oferta, 'green' si no.
@@ -168,7 +278,11 @@ export async function processJobAnalysis(jobText) {
     }
 
     renderAnalysisDashboard(analysis);
-    dom.contentOferta.innerHTML = marked.parse(jobText);
+    
+    // Mostrem l'oferta formatada oficial per l'IA en lloc del text en brut
+    const formattedOffer = analysis.oferta_formatada_md || jobText;
+    dom.contentOferta.innerHTML = marked.parse(formattedOffer);
+
 
     dom.statusLoader.style.display = 'none';
     dom.statusMessageMain.innerHTML = `✔ **Anàlisi de compatibilitat completada**`;
@@ -196,7 +310,7 @@ export async function processJobAnalysis(jobText) {
   }
 }
 
-export function calcularIndicadorGlobal(data) {
+export function calcularIndicadorGlobal(data, locationMetrics = null) {
   const pesCriteris = {
     no_go: 0.25, salari: 0.20, ubicacio_modalitat: 0.15, core_matches: 0.15,
     idiomes: 0.10, secondary_matches: 0.05, sector: 0.05, educacio: 0.05
@@ -215,9 +329,39 @@ export function calcularIndicadorGlobal(data) {
 
   let scoreFinal = 0;
   Object.keys(pesCriteris).forEach(k => {
-    const item = data[k] || {};
-    const status = item.status || 'red';
-    const rawVal = ptsMap[k][status] !== undefined ? ptsMap[k][status] : 0;
+    let rawVal = 0;
+    
+    if (k === 'ubicacio_modalitat') {
+      // Nova lògica 40/30/30
+      const item = data[k] || {};
+      const status = item.status || 'red';
+      const modalitatScore = ptsMap[k][status]; // el valor base de la IA (40, 100, 0)
+      
+      let kpiScore = modalitatScore * 0.4; // 40% modalitat
+      
+      if (locationMetrics) {
+        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        const maxDist = parseFloat(profile.radius) || 50;
+        const maxTimeStr = profile.commuteTime || "00:45";
+        const [h, m] = maxTimeStr.split(':').map(Number);
+        const maxTimeSeconds = (h * 3600) + (m * 60);
+
+        const distScore = (locationMetrics.distance / 1000 <= maxDist) ? 100 : 0;
+        const timeScore = (locationMetrics.duration <= maxTimeSeconds) ? 100 : 0;
+        
+        kpiScore += (distScore * 0.3) + (timeScore * 0.3);
+      } else {
+        // Mentre no tenim mètriques, es manté pendent (només contem modalitat o assumim èxit?)
+        // Assumirem èxit temporal per no espantar l'usuari o neutralitat? 
+        // L'usuari diu que "el valor serà 0" si se supera, així que si no ho sabem encara, no sumem.
+      }
+      rawVal = kpiScore;
+    } else {
+      const item = data[k] || {};
+      const status = item.status || 'red';
+      rawVal = ptsMap[k][status] !== undefined ? ptsMap[k][status] : 0;
+    }
+    
     scoreFinal += rawVal * pesCriteris[k];
   });
   return Math.round(scoreFinal);
@@ -230,7 +374,7 @@ export function renderAnalysisDashboard(data) {
     <div class="global-indicator-card">
       <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
         <h3 style="margin: 0; color: #333;">Índex de Compatibilitat Global</h3>
-        <span style="font-weight: 700; font-size: 1.4rem; color: #1a1a1a;">${score}%</span>
+        <span id="global-score-text" style="font-weight: 700; font-size: 1.4rem; color: #1a1a1a;">${score}%</span>
       </div>
       <div class="global-bar-container">
         <div class="global-marker" id="global-score-marker" style="left: 0%;">
@@ -254,7 +398,7 @@ export function renderAnalysisDashboard(data) {
     no_go: "🟢 0 coincidències detectades (neta d'exclusions) | 🟡 Es detecta 1 requisit vetat | 🔴 2 o més requisits vetats detectats",
     core_matches: "🟢 Es detecten més de 2 coincidències amb l'stack Core | 🟡 Es detecten 1 o 2 coincidències | 🔴 No hi ha cap coincidència Core",
     secondary_matches: "🟢 Es detecten més de 2 coincidències amb l'stack Secundari | 🟡 Es detecten 1 o 2 coincidències | 🔴 No hi ha cap coincidència aplicable",
-    ubicacio_modalitat: "🟢 Compleix o encaixa amb la teva preferència de mobilitat territorial i teletreball | 🟡 Discrepa de la teva preferència base pactada",
+    ubicacio_modalitat: "🟢 Score > 60% (Modalitat 40% + Distància 30% + Temps 30%) | 🟡 Score 30-60% | 🔴 Score < 30%",
     salari: "🟢 L'oferta arriba o supera el salari desitjat | 🟡 No informat o comprès entre el mínim i el desitjat | 🔴 Inferior al mínim requerit",
     sector: "🟢 L'empresa pertany a un sector on ja tens experiència prèvia | 🟡 Canvi de sector (nou per al teu perfil)",
     educacio: "🟢 Es troben més de dues coincidències (o no se n'exigeix cap) | 🟡 Es troben una o dues coincidències | 🔴 No es troba cap coincidència i se n'exigeixen explícitament",
@@ -272,7 +416,7 @@ export function renderAnalysisDashboard(data) {
     idiomes: "Idiomes Requerits"
   };
 
-  const keysToRender = ['no_go', 'core_matches', 'secondary_matches', 'ubicacio_modalitat', 'salari', 'sector', 'educacio', 'idiomes'];
+  const keysToRender = ['no_go', 'ubicacio_modalitat', 'secondary_matches', 'core_matches', 'salari', 'sector', 'educacio', 'idiomes'];
   const pesCriteris = { no_go: 25, salari: 20, ubicacio_modalitat: 15, core_matches: 15, idiomes: 10, secondary_matches: 5, sector: 5, educacio: 5 };
   const ptsMap = {
     no_go: { green: 100, amber: 50, red: 0 },
@@ -296,17 +440,34 @@ export function renderAnalysisDashboard(data) {
     const earnedPes = (rawVal * maxPes) / 100;
     const earnedText = Number.isInteger(earnedPes) ? earnedPes : earnedPes.toFixed(1);
 
-    const weightBadge = `<span style="display:inline-block; background:#eef3f8; color:#0a66c2; padding: 2px 6px; border-radius: 4px; font-size:0.75rem; font-weight:bold; margin-right: 8px;">${earnedText}% / ${maxPes}%</span>`;
+    const weightBadgeId = `weight-badge-${k}`;
+    const weightBadge = `<span id="${weightBadgeId}" style="display:inline-block; background:#eef3f8; color:#0a66c2; padding: 2px 6px; border-radius: 4px; font-size:0.75rem; font-weight:bold; margin-right: 8px;">${earnedText}% / ${maxPes}%</span>`;
+
+    let extraHtml = '';
+    if (k === 'ubicacio_modalitat' && data.ubicacio_oferta && data.ubicacio_oferta !== 'Desconeguda') {
+      extraHtml = `
+        <div id="offer-route-map-container" style="margin: 16px 0; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background: #f9f9f9;">
+          <div id="offer-route-map" style="width: 100%; aspect-ratio: 1 / 1;"></div>
+          <div id="offer-route-info" style="padding: 10px 12px; font-size: 0.8rem; color: #333; border-top: 1px solid #eee; background: #fff; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px; color: #666;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Ruta a <strong>${data.ubicacio_oferta}</strong></span>
+            </div>
+            <div id="route-metrics" style="font-weight: 600; color: var(--li-blue);">Calculant ruta...</div>
+          </div>
+        </div>
+      `;
+    }
 
     html += `
-      <details class="analysis-item">
+      <details class="analysis-item" ${k === 'ubicacio_modalitat' ? 'open' : ''}>
         <summary class="analysis-summary">
           <div class="analysis-info">
             <p class="analysis-label" style="display:flex; align-items:center;">${weightBadge}${titleMap[k]}</p>
             <p class="analysis-value" style="font-size: 0.9rem; margin-top: 4px;">${resum}</p>
           </div>
           <div class="status-indicator">
-            <div class="status-circle ${status}"></div>
+            <div id="status-circle-${k}" class="status-circle ${status}"></div>
           </div>
         </summary>
         <div class="analysis-details">
@@ -320,6 +481,7 @@ export function renderAnalysisDashboard(data) {
               <p>${offer_data}</p>
             </div>
           </div>
+          ${extraHtml}
           <div class="kpi-disclaimer">
             <strong>ℹ️ Regles de mesura d'aquest KPI:</strong> ${disclaimers[k]}
           </div>
@@ -329,7 +491,24 @@ export function renderAnalysisDashboard(data) {
   });
 
   html += `</div>`;
+
+  // Afegim el bloc de conclusions expertes si existeix
+  if (data.encaix_professional_md) {
+    html += `
+      <div class="expert-conclusions-card">
+        <div class="expert-header">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <h4>Conclusions de l'Expert RRHH</h4>
+        </div>
+        <div class="expert-content markdown-preview">
+          ${marked.parse(data.encaix_professional_md)}
+        </div>
+      </div>
+    `;
+  }
+
   dom.contentAnalisi.innerHTML = html;
+
 
   const btnPrint = document.getElementById('btn-imprimir-analisi');
   if (btnPrint) btnPrint.hidden = false;
@@ -337,6 +516,72 @@ export function renderAnalysisDashboard(data) {
   setTimeout(() => {
     const marker = document.getElementById('global-score-marker');
     if (marker) marker.style.left = `${score}%`;
+
+    // Render offer route map if possible
+    if (data.ubicacio_oferta && data.ubicacio_oferta !== 'Desconeguda') {
+      const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      const address = profile.address || '';
+      const radius = profile.radius || 50;
+      if (address) {
+        renderOfferRouteMap('offer-route-map', address, data.ubicacio_oferta, radius).then(metrics => {
+          if (metrics) {
+            const kmValue = metrics.distance / 1000;
+            const km = kmValue.toFixed(1);
+            const mins = Math.round(metrics.duration / 60);
+            const hours = Math.floor(mins / 60);
+            const remainingMins = mins % 60;
+            
+            let timeText = hours > 0 ? `${hours}h ${remainingMins}min` : `${mins} min`;
+            const metricsEl = document.getElementById('route-metrics');
+            if (metricsEl) {
+              metricsEl.innerHTML = `${km} km | ${timeText}`;
+            }
+
+            // Recalcular KPI Score i Global Index
+            const maxTimeStr = profile.commuteTime || "00:45";
+            const [h, m] = maxTimeStr.split(':').map(Number);
+            const maxTimeSeconds = (h * 3600) + (m * 60);
+
+            const item = data['ubicacio_modalitat'] || {};
+            const baseStatus = item.status || 'red';
+            const modalitatScore = (baseStatus === 'green' ? 100 : baseStatus === 'amber' ? 40 : 0);
+            const distScore = (kmValue <= radius) ? 100 : 0;
+            const timeScore = (metrics.duration <= maxTimeSeconds) ? 100 : 0;
+            
+            const finalKpiScore = (modalitatScore * 0.4) + (distScore * 0.3) + (timeScore * 0.3);
+            const finalStatus = finalKpiScore > 60 ? 'green' : finalKpiScore >= 30 ? 'amber' : 'red';
+            
+            // Actualitzar badge de pes
+            const badge = document.getElementById('weight-badge-ubicacio_modalitat');
+            if (badge) {
+              const maxPes = 15; // El pes del KPI
+              const earnedPes = (finalKpiScore * maxPes) / 100;
+              const earnedText = Number.isInteger(earnedPes) ? earnedPes : earnedPes.toFixed(1);
+              badge.textContent = `${earnedText}% / ${maxPes}%`;
+            }
+
+            // Actualitzar cercle de status
+            const circle = document.getElementById('status-circle-ubicacio_modalitat');
+            if (circle) {
+              circle.className = `status-circle ${finalStatus}`;
+            }
+
+            // Actualitzar marcador global
+            const newGlobalScore = calcularIndicadorGlobal(data, metrics);
+            const globalText = document.getElementById('global-score-text');
+            const globalMarker = document.getElementById('global-score-marker');
+            if (globalText) globalText.textContent = `${newGlobalScore}%`;
+            if (globalMarker) globalMarker.style.left = `${newGlobalScore}%`;
+
+          } else {
+            const metricsEl = document.getElementById('route-metrics');
+            if (metricsEl) {
+              metricsEl.textContent = "Ruta no disponible";
+            }
+          }
+        });
+      }
+    }
   }, 50);
 }
 
