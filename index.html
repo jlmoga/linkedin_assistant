@@ -108,7 +108,7 @@
 
     <!-- PANEL: Examina oferta -->
     <section id="panel-examina-oferta" class="tab-panel active" role="tabpanel" aria-labelledby="tab-examina-oferta">
-      <div id="oferta-url-input-area">
+      <div id="oferta-input-area">
         <div class="panel-hero">
           <div class="panel-hero-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -118,15 +118,18 @@
               <path d="M11 8v6M8 11h6" />
             </svg>
           </div>
-          <h2 class="panel-title">Examina una oferta</h2>
+          <h2 class="panel-title">Inicia l'exploració de l'oferta</h2>
           <p class="panel-description">
-            Enganxa la URL de l'oferta de LinkedIn que t'interessa analitzar.
+            Elegeix com vols carregar l'oferta de feina per analitzar la teva compatibilitat.
           </p>
         </div>
 
-        <div class="search-container">
-          <div class="input-group">
-            <div class="input-with-icon flex-grow">
+        <div class="dual-input-container">
+          <!-- Opció A: URL -->
+          <div class="input-option-card">
+            <h4 class="option-title">Opció A: Via adreça web</h4>
+            <p class="option-subtitle">Funciona amb LinkedIn i la majoria de portals d'ocupació.</p>
+            <div class="input-with-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -134,14 +137,24 @@
               </svg>
               <input type="url" id="input-oferta-url" placeholder="https://www.linkedin.com/jobs/view/..." />
             </div>
-            <button id="btn-examinar" class="primary-btn" disabled
-              title="Has de generar el teu CV al Perfil primer">Examinar</button>
+            <button id="btn-examinar-url" class="primary-btn mt-4 w-full" disabled>Llegir oferta i formatar</button>
           </div>
-          <p id="oferta-error" class="input-error-msg" hidden>Si us plau, introdueix una URL vàlida.</p>
-          <p id="cv-missing-msg" class="input-hint" style="color: var(--li-blue);">⚠️ Has de generar o afegir el teu CV
-            JSON a la pestanya <strong>"El meu perfil"</strong> per poder analitzar ofertes.</p>
+
+          <!-- Opció B: Manual -->
+          <div class="input-option-card">
+            <h4 class="option-title">Opció B: Enganxar text</h4>
+            <p class="option-subtitle">Copia i enganxa la descripció si la URL fallés o fóra privada.</p>
+            <textarea id="textarea-oferta-manual" 
+                      placeholder="Enganxa aquí el títol, empresa i descripció de l'oferta..."
+                      class="manual-entry-textarea"></textarea>
+            <button id="btn-examinar-manual" class="primary-btn mt-3 w-full" disabled>Processar text manual</button>
+          </div>
         </div>
+        
+        <p id="oferta-error" class="input-error-msg text-center mt-4" hidden>Si us plau, introdueix dades vàlides per continuar.</p>
+        <p id="cv-missing-msg" class="input-hint text-center" style="color: var(--li-blue);">⚠️ Recorda que necessites tenir el teu CV a <strong>"El meu CV"</strong> per fer l'anàlisi completa.</p>
       </div>
+
 
       <!-- ANALYSIS CONTROLS (NEW) -->
       <div class="analysis-controls" hidden>
@@ -150,14 +163,7 @@
         </button>
       </div>
 
-      <!-- STATUS INDICATOR (NEW) -->
-      <div id="oferta-status-container" class="status-indicator-card" hidden>
-        <div id="status-loader" class="status-loader" style="display: none;"></div>
-        <div class="status-text-content">
-          <p id="status-message-main"><strong>Prepara't per l'anàlisi</strong></p>
-          <p id="status-message-sub" class="status-subtext">Introdueix una URL i clica "Examinar" per començar.</p>
-        </div>
-      </div>
+
 
       <div id="oferta-analysis-results" class="comparison-grid" hidden>
         <!-- LEFT: Offer Details -->
@@ -168,6 +174,18 @@
           <div id="content-oferta" class="column-content markdown-preview">
             <!-- Info de l'oferta (IA) -->
           </div>
+          <div class="info-alert compact"
+            style="margin: 16px; margin-top: 0; border-top: 1px solid var(--border); border-radius: 0 0 var(--radius-md) var(--radius-md); background: var(--bg-body);">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"
+              style="flex-shrink: 0; margin-top: 2px;">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+            <span style="font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary);">Aquest text és producte d'una anàlisi de l'oferta original, per tal de poder centrar l'anàlisi de compatibilitat en dades rellevants.</span>
+          </div>
+
         </div>
 
         <!-- RIGHT: Candidate CV -->

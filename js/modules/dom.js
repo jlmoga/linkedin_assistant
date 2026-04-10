@@ -31,17 +31,17 @@ export const tagListCore = document.getElementById('tag-list-core');
 
 // Offer Elements
 export const inputOfertaUrl = document.getElementById('input-oferta-url');
-export const btnExaminar = document.getElementById('btn-examinar');
+export const btnExaminarUrl = document.getElementById('btn-examinar-url');
+export const textareaOfertaManual = document.getElementById('textarea-oferta-manual');
+export const btnExaminarManual = document.getElementById('btn-examinar-manual');
+
 export const ofertaError = document.getElementById('oferta-error');
 export const cvMissingMsg = document.getElementById('cv-missing-msg');
 export const ofertaResults = document.getElementById('oferta-analysis-results');
-export const ofertaUrlInputArea = document.getElementById('oferta-url-input-area');
+export const ofertaInputArea = document.getElementById('oferta-input-area');
 
-// New Status & Comparison UI
-export const ofertaStatusContainer = document.getElementById('oferta-status-container');
-export const statusLoader = document.getElementById('status-loader');
-export const statusMessageMain = document.getElementById('status-message-main');
-export const statusMessageSub = document.getElementById('status-message-sub');
+
+// New Container UI
 export const contentOferta = document.getElementById('content-oferta');
 export const contentCv = document.getElementById('content-cv');
 export const contentAnalisi = document.getElementById('content-analisi');

@@ -87,13 +87,14 @@ export function imprimirInforme() {
             .analysis-item { page-break-inside: avoid; }
             .global-indicator-card { page-break-after: avoid; }
             #offer-route-map-container { 
-              max-width: 500px; 
+              max-width: 350px; 
               margin: 20px auto !important; 
             }
             #offer-route-map { 
-              width: 500px !important; 
-              height: 500px !important; 
+              width: 350px !important; 
+              height: 350px !important; 
             }
+
             .expert-conclusions-card {
               background: #f0f7ff !important;
               border: 1px solid #0a66c2 !important;

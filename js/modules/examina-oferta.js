@@ -10,80 +10,175 @@ import { isValidUrl, renderJsonToMarkdown, cleanHtml } from './utils.js';
 import { updateCoverLetterUI } from './carta-presentacio.js';
 import { renderOfferRouteMap } from './map-manager.js';
 
-export async function startAnalysis(url) {
-  if (dom.ofertaUrlInputArea) dom.ofertaUrlInputArea.hidden = true;
-
-  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-  const renderedCv = renderJsonToMarkdown(profile.cvJson);
-
+/**
+ * Fase 1: Extracció i Formatat de l'oferta.
+ * @param {Object} input - { type: 'url' | 'manual', value: string }
+ */
+export async function handleOfferExtraction(input) {
+  if (dom.ofertaInputArea) dom.ofertaInputArea.hidden = true;
+  if (dom.ofertaResults) dom.ofertaResults.hidden = false;
   if (dom.analysisControls) dom.analysisControls.hidden = false;
 
-  dom.ofertaStatusContainer.hidden = false;
-  dom.statusLoader.style.display = 'block';
-  dom.statusMessageMain.innerHTML = `<strong>Analitzant l'oferta...</strong>`;
-  dom.statusMessageSub.textContent = `Intentant llegir: ${url}`;
+  // Carregar el CV immediatament (demana l'usuari)
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  if (profile.cvJson) {
+    dom.contentCv.innerHTML = marked.parse(renderJsonToMarkdown(profile.cvJson));
+    const btnPrintCv = document.getElementById('btn-imprimir-cv');
+    if (btnPrintCv) btnPrintCv.hidden = false;
+  }
 
-  dom.ofertaResults.hidden = false;
-  dom.contentCv.innerHTML = marked.parse(renderedCv);
-
+  // Placeholder de càrrega per a l'oferta
   dom.contentOferta.innerHTML = `
-    <div class="text-center py-10">
-      <p class="text-secondary italic">Explorant els detalls del lloc de treball...</p>
-      <div class="status-loader mx-auto mt-4"></div>
+    <div class="contextual-loader-container">
+      <div class="loader-spinner"></div>
+      <p class="text-secondary"><strong>Llegint l'oferta...</strong></p>
+      <p class="text-xs text-muted mt-2">Extraient dades i aplicant format professional.</p>
     </div>
   `;
 
-  if (dom.contentAnalisi) dom.contentAnalisi.innerHTML = '';
+  // Placeholder de benvinguda/espera per a l'anàlisi
+  dom.contentAnalisi.innerHTML = `
+    <div class="text-center py-12 px-6">
+      <p class="text-secondary italic mb-4">L'anàlisi de compatibilitat s'activarà quan l'oferta estigui processada.</p>
+    </div>
+  `;
 
-  // 1. Detectar si és LinkedIn
-  const isLinkedIn = url.includes('linkedin.com/jobs') || url.includes('linkedin.com/mwlite/jobs');
+  let jobToProcess = "";
 
-  if (isLinkedIn) {
-    // LinkedIn sol bloquejar proxies CORS i scraping directe. Fallback directe.
-    showManualPasteUI("Accés restringit per LinkedIn", "LinkedIn no permet la lectura directa des del navegador.");
-    return;
-  }
-
-  // 2. Intentar scraping per a URLs externes
   try {
-    dom.statusMessageMain.innerHTML = `<strong>Llegint el lloc web...</strong>`;
-    const html = await scrapOffer(url);
+    if (input.type === 'url') {
+      const isLinkedIn = input.value.includes('linkedin.com/jobs') || input.value.includes('linkedin.com/mwlite/jobs');
+      if (isLinkedIn) {
+        throw new Error('LINKEDIN_RESTRICTED');
+      }
+
+      const html = await scrapOffer(input.value);
+      if (!html) throw new Error('EMPTY_HTML');
+      
+      jobToProcess = await extractJobFromHtml(html);
+    } else {
+      // Entrada manual directa a formatat estructural
+      jobToProcess = await formatManualJob(input.value);
+    }
+
+    if (!jobToProcess) throw new Error('EXTRACTION_FAILED');
+
+    // Renderitzem l'oferta estructurada a la Columna 1
+    dom.contentOferta.innerHTML = marked.parse(jobToProcess);
     
-    if (!html) throw new Error('EMPTY_HTML');
-
-    dom.statusMessageMain.innerHTML = `<strong>Detectant punts clau...</strong>`;
-    dom.statusMessageSub.textContent = `Analitzant funcions i requeriments crítics.`;
-    const extractedJobText = await extractJobFromHtml(html);
-
-    
-    if (!extractedJobText) throw new Error('EXTRACTION_FAILED');
-
-    // Si tot ha anat bé, procedim a l'anàlisi de compatibilitat
-    processJobAnalysis(extractedJobText);
+    // Mostrem el botó de continuar a la Columna 3
+    renderContinueButton(jobToProcess);
 
   } catch (err) {
-    console.warn("Scraping automàtic fallit:", err);
-    showManualPasteUI("No s'ha pogut llegir l'oferta", "No hem pogut extreure les dades automàticament d'aquesta web.");
+    console.error("Error en Fase 1:", err);
+    let errorMsg = "No hem pogut llegir l'oferta automàticament";
+    let subMsg = "Això pot passar per bloquejos del portal o format incompatible.";
+    
+    if (err.message === 'LINKEDIN_RESTRICTED') {
+      errorMsg = "Accés restringit per LinkedIn";
+      subMsg = "LinkedIn no permet la lectura directa des del navegador per privacitat.";
+    }
+
+    dom.contentOferta.innerHTML = `
+      <div class="text-center py-10 px-4">
+        <div class="mb-4 text-amber-500">
+           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
+        <p class="text-li-blue font-bold">${errorMsg}</p>
+        <p class="text-sm text-secondary mt-2 mb-6">${subMsg}</p>
+        <button id="btn-fallback-manual" class="primary-btn w-full">Enganxa el text manualment</button>
+      </div>
+    `;
+
+    document.getElementById('btn-fallback-manual').addEventListener('click', () => {
+       dom.ofertaInputArea.hidden = false;
+       dom.ofertaResults.hidden = true;
+       // Enfocar el textarea manual
+       dom.textareaOfertaManual.focus();
+    });
   }
 }
 
 /**
- * Recupera l'HTML d'una URL utilitzant AllOrigins com a proxy CORS.
+ * Utilitza Gemini per estructurar un text que ja ha estat enganxat manualment.
  */
-async function scrapOffer(url) {
-  try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
+async function formatManualJob(text) {
+  const prompt = `
+    Ets un expert en recruiting. T'enviaré un text que és una oferta de feina.
+    La teva tasca és organitzar-lo en Markdown seguiment aquesta estructura de 7 punts:
+    - **Títol de la posició**
+    - **Descripció de la posició**
+    - **Localització del lloc de feina**
+    - **Principals funcions**
+    - **Requeriments crítics**
+    - **Requeriments secundaris**
+    - **Beneficis**
     
-    if (!response.ok) throw new Error(`Proxy error: ${response.status}`);
-    
-    const data = await response.json();
-    return data.contents; // AllOrigins retorna l'HTML a la propietat 'contents'
-  } catch (err) {
-    console.error("Error en fer el fetch de l'oferta:", err);
-    return null;
-  }
+    Text:
+    ${text.substring(0, 10000)}
+  `;
+  return await callGemini(prompt);
 }
+
+function renderContinueButton(jobText) {
+  dom.contentAnalisi.innerHTML = `
+    <div class="prominent-action-container">
+      <h3 class="text-lg font-bold text-li-blue mb-2">Tot a punt!</h3>
+      <p class="text-secondary mb-8 max-w-md mx-auto">Hem processat els detalls de l'oferta. Ara pots analitzar com d'aprop estàs de complir amb el perfil sol·licitat.</p>
+      <button id="btn-trigger-full-analysis" class="btn-continue-prominent">
+        <span>Continua amb l'anàlisi de compatibilitat</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+  `;
+
+  document.getElementById('btn-trigger-full-analysis').addEventListener('click', () => {
+    processJobAnalysis(jobText);
+  });
+}
+
+
+async function scrapOffer(url) {
+  const proxies = [
+    { 
+      name: 'AllOrigins', 
+      url: (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+      transform: (data) => data.contents 
+    },
+    { 
+      name: 'CorsProxy.io', 
+      url: (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      transform: (data) => data // Normalment retorna el text directament si no és JSON
+    }
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      console.log(`Intentant scrap amb ${proxy.name}...`);
+      const proxyUrl = proxy.url(url);
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        console.warn(`${proxy.name} ha retornat error: ${response.status}`);
+        continue;
+      }
+      
+      // AllOrigins sempre retorna JSON. CorsProxy.io retorna el contingut directament.
+      if (proxy.name === 'AllOrigins') {
+        const data = await response.json();
+        const html = proxy.transform(data);
+        if (html) return html;
+      } else {
+        const html = await response.text();
+        if (html) return html;
+      }
+    } catch (err) {
+      console.error(`Error amb ${proxy.name}:`, err);
+    }
+  }
+  return null;
+}
+
 
 /**
  * Utilitza Gemini per extreure la informació professional rellevant d'un codi HTML brut.
@@ -128,11 +223,7 @@ async function extractJobFromHtml(html) {
 }
 
 export function showManualPasteUI(title = "Accés restringit", subtext = "Actualment no podem llegir aquesta web automàticament.") {
-  if (dom.ofertaUrlInputArea) dom.ofertaUrlInputArea.hidden = true;
-
-  dom.statusMessageMain.innerHTML = `<strong>${title}</strong>`;
-  dom.statusMessageSub.textContent = subtext;
-  dom.statusLoader.style.display = 'none';
+  if (dom.ofertaInputArea) dom.ofertaInputArea.hidden = true;
 
   dom.contentOferta.innerHTML = `
     <div class="manual-paste-area p-4">
@@ -181,17 +272,14 @@ export async function processJobAnalysis(jobText) {
   const userEdu = config.educacio_i_certificacions?.map(e => `${e.titol} (${e.institucio})`).filter(Boolean) || [];
   const userIdiomes = config.perfil_tecnic?.idiomes?.map(i => `${i.idioma} (${i.nivell})`).filter(Boolean) || [];
 
-  dom.statusLoader.style.display = 'block';
-  dom.statusMessageMain.innerHTML = `<strong>Realitzant avaluació semàntica...</strong>`;
-  dom.statusMessageSub.textContent = `Contrastant el teu perfil amb els requeriments de l'oferta.`;
-
-
   dom.contentAnalisi.innerHTML = `
-    <div class="text-center py-10">
-      <p class="text-secondary italic">Generant dashboard de compatibilitat...</p>
-      <div class="status-loader mx-auto mt-4"></div>
+    <div class="contextual-loader-container">
+      <div class="loader-spinner"></div>
+      <p class="text-secondary"><strong>Comparant perfils...</strong></p>
+      <p class="text-xs text-muted mt-2">Avaluant matching semàntic i semàfors de compatibilitat.</p>
     </div>
   `;
+
 
   const prompt = `
     Ets un expert en recruiting i RRHH. Compara aquest perfil amb l'oferta de feina proporcionada.
@@ -211,19 +299,10 @@ export async function processJobAnalysis(jobText) {
     ${jobText}
     
     TASQUES:
-    1. Generar una versió estructurada de l'oferta (camp 'oferta_formatada_md') seguint aquests punts:
-       - Títol de la posició
-       - Descripció de la posició
-       - Localització del lloc de feina
-       - Principals funcions
-       - Requeriments crítics
-       - Requeriments secundaris
-       - Beneficis
-       (Si falta info a alguna secció, escriu: "No s'ha trobat informació rellevant per aquesta secció.")
-       
-    2. Realitzar l'anàlisi de compatibilitat (KPIs).
+    1. Realitzar l'anàlisi de compatibilitat (KPIs) comparant els requeriments de l'oferta amb el perfil de l'usuari.
     
-    3. Generar un resum d'encaix professional (camp 'encaix_professional_md'):
+    2. Generar un resum d'encaix professional (camp 'encaix_professional_md'):
+
        - Actua com un expert en Recruiting i RRHH.
        - Focus: Acompliment de funcions i requeriments crítics.
        - Estil: CONCÍS i molt enfocat a CARÀCTER PRÀCTIC.
@@ -231,8 +310,8 @@ export async function processJobAnalysis(jobText) {
 
     Respon EXCLUSIVAMENT amb un objecte JSON amb aquesta estructura EXACTA.
     {
-      "oferta_formatada_md": "...",
       "encaix_professional_md": "### Conclusions de l'Expert\\n... (Anàlisi pràctica i concisa)",
+
       "no_go": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
       "core_matches": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
       "secondary_matches": { "status": "...", "resum": "...", "user_data": "...", "offer_data": "..." },
@@ -279,15 +358,8 @@ export async function processJobAnalysis(jobText) {
 
     renderAnalysisDashboard(analysis);
     
-    // Mostrem l'oferta formatada oficial per l'IA en lloc del text en brut
-    const formattedOffer = analysis.oferta_formatada_md || jobText;
-    dom.contentOferta.innerHTML = marked.parse(formattedOffer);
-
-
-    dom.statusLoader.style.display = 'none';
-    dom.statusMessageMain.innerHTML = `✔ **Anàlisi de compatibilitat completada**`;
-    dom.statusMessageSub.textContent = `Dashboard generat basat en el teu perfil.`;
     uiUtils.updateAiStatus("Anàlisi de compatibilitat completada");
+
     
     state.currentJobAnalysis = analysis;
     updateCoverLetterUI();
@@ -302,12 +374,9 @@ export async function processJobAnalysis(jobText) {
     console.error('Error de Gemini on Job Analysis:', err);
     uiUtils.updateHeaderStatus("amber", "IA No Disponible", err.message);
     
-    dom.statusLoader.style.display = 'none';
-    dom.statusMessageMain.innerHTML = `<span style="color:red">🔴 IA No Disponible</span>`;
-    dom.statusMessageSub.textContent = "Detalls: " + err.message;
-    
     showManualPasteUI();
   }
+
 }
 
 export function calcularIndicadorGlobal(data, locationMetrics = null) {
@@ -369,8 +438,12 @@ export function calcularIndicadorGlobal(data, locationMetrics = null) {
 
 export function renderAnalysisDashboard(data) {
   const score = calcularIndicadorGlobal(data);
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const userRadius = profile.radius || 50;
+  const userTime = profile.commuteTime || "00:45";
 
   let html = `
+
     <div class="global-indicator-card">
       <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
         <h3 style="margin: 0; color: #333;">Índex de Compatibilitat Global</h3>
@@ -416,7 +489,8 @@ export function renderAnalysisDashboard(data) {
     idiomes: "Idiomes Requerits"
   };
 
-  const keysToRender = ['no_go', 'ubicacio_modalitat', 'secondary_matches', 'core_matches', 'salari', 'sector', 'educacio', 'idiomes'];
+  const keysToRender = ['no_go', 'core_matches', 'secondary_matches', 'ubicacio_modalitat', 'salari', 'sector', 'educacio', 'idiomes'];
+
   const pesCriteris = { no_go: 25, salari: 20, ubicacio_modalitat: 15, core_matches: 15, idiomes: 10, secondary_matches: 5, sector: 5, educacio: 5 };
   const ptsMap = {
     no_go: { green: 100, amber: 50, red: 0 },
@@ -455,7 +529,12 @@ export function renderAnalysisDashboard(data) {
             </div>
             <div id="route-metrics" style="font-weight: 600; color: var(--li-blue);">Calculant ruta...</div>
           </div>
+          <div style="padding: 6px 12px; font-size: 0.75rem; color: #777; background: #fcfcfc; border-top: 1px dashed #eee; display: flex; align-items: center; gap: 4px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Límits configurats: <strong>${userRadius} km</strong> de ràdio i <strong>${userTime}</strong> de desplaçament.</span>
+          </div>
         </div>
+
       `;
     }
 

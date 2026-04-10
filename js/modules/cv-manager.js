@@ -437,9 +437,18 @@ export function checkProfileStatus() {
     uiUtils.updateHeaderStatus("green", "Actiu");
   }
 
-  dom.btnExaminar.disabled = !hasCv || !isValidUrl(dom.inputOfertaUrl.value.trim());
-  dom.btnExaminar.title = hasCv ? "" : "Has de generar el teu CV al Perfil primer";
+  const urlInput = dom.inputOfertaUrl.value.trim();
+  const manualInput = dom.textareaOfertaManual.value.trim();
+
+  dom.btnExaminarUrl.disabled = !hasCv || !urlInput;
+  dom.btnExaminarManual.disabled = !hasCv || !manualInput;
+  
+  const title = hasCv ? "" : "Has de generar el teu CV al Perfil primer";
+  dom.btnExaminarUrl.title = title;
+  dom.btnExaminarManual.title = title;
+
   dom.cvMissingMsg.hidden = hasCv;
+
 
   if (hasCv && dom.contentCv) {
     dom.contentCv.innerHTML = marked.parse(renderJsonToMarkdown(profile.cvJson));
@@ -450,18 +459,13 @@ export function checkProfileStatus() {
     if (btnPrintCv) btnPrintCv.hidden = true;
   }
 
-  if (dom.ofertaResults.hidden && dom.ofertaUrlInputArea) {
-    dom.ofertaUrlInputArea.hidden = false;
+  if (dom.ofertaResults.hidden && dom.ofertaInputArea) {
+    dom.ofertaInputArea.hidden = false;
   }
 
-  if (hasCv && dom.ofertaResults.hidden) {
-    dom.ofertaStatusContainer.hidden = false;
-    if (dom.analysisControls) dom.analysisControls.hidden = true;
-    dom.statusLoader.style.display = 'none';
-    dom.statusMessageMain.innerHTML = `<strong>Prepara't per l'anàlisi</strong>`;
-    dom.statusMessageSub.textContent = `Introdueix una URL i clica "Examinar" per començar.`;
-  } else if (!hasCv) {
-    dom.ofertaStatusContainer.hidden = true;
-    if (dom.analysisControls) dom.analysisControls.hidden = true;
+
+  if (hasCv && dom.ofertaResults.hidden && dom.analysisControls) {
+    dom.analysisControls.hidden = true;
   }
 }
+

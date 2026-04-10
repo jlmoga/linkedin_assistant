@@ -183,30 +183,37 @@ function setupEventListeners() {
 
   // Offer Tab
   dom.inputOfertaUrl.addEventListener('input', (e) => {
-    const url = e.target.value.trim();
-    const isValid = !url || isValidUrl(url);
-    dom.ofertaError.hidden = isValid;
     cvManager.checkProfileStatus();
   });
 
-  dom.btnExaminar.addEventListener('click', () => {
+  dom.textareaOfertaManual.addEventListener('input', (e) => {
+    cvManager.checkProfileStatus();
+  });
+
+  dom.btnExaminarUrl.addEventListener('click', () => {
     const url = dom.inputOfertaUrl.value.trim();
-    if (isValidUrl(url)) {
-      offerAnalysis.startAnalysis(url);
-    } else {
-      dom.ofertaError.hidden = false;
+    if (url) {
+      offerAnalysis.handleOfferExtraction({ type: 'url', value: url });
     }
   });
 
+  dom.btnExaminarManual.addEventListener('click', () => {
+    const text = dom.textareaOfertaManual.value.trim();
+    if (text) {
+      offerAnalysis.handleOfferExtraction({ type: 'manual', value: text });
+    }
+  });
+
+
   if (dom.btnNovaAnalisi) {
     dom.btnNovaAnalisi.addEventListener('click', () => {
-      dom.ofertaUrlInputArea.hidden = false;
+      dom.ofertaInputArea.hidden = false;
       dom.ofertaResults.hidden = true;
-      dom.ofertaStatusContainer.hidden = true;
       if (dom.analysisControls) dom.analysisControls.hidden = true;
       if (dom.contentOferta) dom.contentOferta.innerHTML = '';
       if (dom.contentAnalisi) dom.contentAnalisi.innerHTML = '';
       dom.inputOfertaUrl.value = '';
+      dom.textareaOfertaManual.value = '';
       cvManager.checkProfileStatus();
       if (dom.btnNavCarta) dom.btnNavCarta.hidden = true;
       state.currentJobAnalysis = null;
@@ -214,6 +221,7 @@ function setupEventListeners() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
+
 
   // Modality Chips
   dom.modalityChips.forEach(chip => {
